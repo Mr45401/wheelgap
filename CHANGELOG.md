@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refuse `https://` to `http://` redirects when fetching from PyPI or `--pyodide-lock`. (#93)
+
 ## 0.6.1 (2026-11-09)
 
 Two more lockfile formats, and safer `--pyodide-lock` fetching.
