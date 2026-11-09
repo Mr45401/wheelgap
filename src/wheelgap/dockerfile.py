@@ -120,7 +120,7 @@ def last_from(text: str) -> str:
 
 
 def _unquote(value: str, args: str) -> str:
-    """Strip single or double quotes the way BuildKit's word lexer does.
+    """Strip single or double quotes as BuildKit does to flag values (parser/split_command.go, extractBuilderFlags).
 
     Backslash escapes (and `$` expansion) aren't modelled, so a value using them is an error, never a guess.
     """
