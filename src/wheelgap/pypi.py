@@ -61,6 +61,7 @@ class _HTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
         newurl: str,
     ) -> urllib.request.Request | None:
         if urlparse(req.full_url).scheme == "https" and urlparse(newurl).scheme != "https":
+            fp.close()
             raise RedirectRefused(f"refused redirect from {req.full_url} to {newurl}")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 

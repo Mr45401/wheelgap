@@ -100,6 +100,16 @@ def test_redirect_handler_refuses_https_downgrades():
     assert plain is not None and plain.full_url == "http://local.example/v2/x/json"
 
 
+def test_opener_uses_the_https_redirect_handler():
+    handlers = [h for h in pypi._OPENER.handlers if isinstance(h, urllib.request.HTTPRedirectHandler)]
+    assert len(handlers) == 1 and isinstance(handlers[0], pypi._HTTPSRedirectHandler)
+    headers = http.client.HTTPMessage()
+    headers["Location"] = "http://mirror.example/lock.json"
+    req = urllib.request.Request("https://cdn.example/pyodide-lock.json")
+    with pytest.raises(pypi.RedirectRefused):  # the real 3xx path: Location header, urljoin, then the check
+        handlers[0].http_error_302(req, io.BytesIO(), 302, "Found", headers)
+
+
 def test_refused_redirect_is_not_retried_and_surfaces_cleanly(monkeypatch):
     sleeps, calls = [], []
     monkeypatch.setattr(pypi.time, "sleep", sleeps.append)
