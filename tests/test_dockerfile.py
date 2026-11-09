@@ -11,6 +11,10 @@ from wheelgap.dockerfile import DockerfileError, ImageTarget, last_from, parse_f
     [
         ("python:3.13-alpine", ImageTarget("3.13", "musl-x86_64", musl="1.2")),
         ("--platform=linux/arm64 python:3.12-slim", ImageTarget("3.12", "linux-aarch64")),
+        ('--platform="linux/arm64" python:3.12-slim', ImageTarget("3.12", "linux-aarch64")),
+        ("--platform='linux/arm64' python:3.12-slim", ImageTarget("3.12", "linux-aarch64")),
+        ('--platform="linux/arm/v7" python:3.13-alpine', ImageTarget("3.13", "musl-armv7l", musl="1.2")),
+        ('--platform="" python:3.13', ImageTarget("3.13", "linux-x86_64")),
         ("python:3.14-slim-trixie", ImageTarget("3.14", "linux-x86_64", glibc="2.41")),
         ("python:3.13-bookworm", ImageTarget("3.13", "linux-x86_64", glibc="2.36")),
         ("python:3.11-slim-bullseye", ImageTarget("3.11", "linux-x86_64", glibc="2.31")),
@@ -296,6 +300,8 @@ def test_escape_directive_rules(tmp_path):
         ("FROM python:3.13 AS a b\n", "expected 'IMAGE' or 'IMAGE AS NAME'"),
         ("FROM --platform=linux/arm64 --platform=linux/amd64 python:3.13\n", "duplicate --platform flag"),
         ("FROM --platform= --platform=linux/arm64 python:3.13\n", "duplicate --platform flag"),
+        ('FROM --platform="linux/arm64 python:3.13\n', "unterminated quote"),
+        ("FROM --platform='linux/arm64 python:3.13\n", "unterminated quote"),
         ("FROM python:3.13 AS\nFROM python:3.12\n", "expected 'IMAGE' or 'IMAGE AS NAME'"),
     ],
 )

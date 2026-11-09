@@ -119,6 +119,25 @@ def last_from(text: str) -> str:
     return found[-1]
 
 
+def _unquote(value: str, args: str) -> str:
+    """Strip single or double quotes the way BuildKit's word lexer does."""
+    out = []
+    quote: str | None = None
+    for ch in value:
+        if quote is None:
+            if ch in ('"', "'"):
+                quote = ch
+            else:
+                out.append(ch)
+        elif ch == quote:
+            quote = None
+        else:
+            out.append(ch)
+    if quote is not None:
+        raise DockerfileError(f"FROM {args}: unterminated quote in --platform={value}")
+    return "".join(out)
+
+
 def _split_from(args: str) -> tuple[str, str | None, str | None]:
     """`[--platform=P] image [AS name]` -> (image, platform, stage name), rejecting what Docker rejects."""
     words = args.split()
@@ -135,7 +154,9 @@ def _split_from(args: str) -> tuple[str, str | None, str | None]:
         if seen_platform:
             raise DockerfileError(f"FROM {args}: duplicate --platform flag")
         seen_platform = True
-        platform = flag.split("=", 1)[1] or None  # an empty value means the default platform, as in Docker
+        platform = (
+            _unquote(flag.split("=", 1)[1], args) or None
+        )  # an empty value means the default platform, as in Docker
     if not words:
         raise DockerfileError(f"FROM {args}: no image")
     if len(words) == 1:
