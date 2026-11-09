@@ -302,6 +302,7 @@ def test_escape_directive_rules(tmp_path):
         ("FROM --platform= --platform=linux/arm64 python:3.13\n", "duplicate --platform flag"),
         ('FROM --platform="linux/arm64 python:3.13\n', "unterminated quote"),
         ("FROM --platform='linux/arm64 python:3.13\n", "unterminated quote"),
+        ('FROM --platform="linux\\/arm64" python:3.13\n', "escapes in --platform aren't supported"),
         ("FROM python:3.13 AS\nFROM python:3.12\n", "expected 'IMAGE' or 'IMAGE AS NAME'"),
     ],
 )

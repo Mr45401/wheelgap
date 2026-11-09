@@ -120,7 +120,12 @@ def last_from(text: str) -> str:
 
 
 def _unquote(value: str, args: str) -> str:
-    """Strip single or double quotes the way BuildKit's word lexer does."""
+    """Strip single or double quotes the way BuildKit's word lexer does.
+
+    Backslash escapes (and `$` expansion) aren't modelled, so a value using them is an error, never a guess.
+    """
+    if "\\" in value or "`" in value:
+        raise DockerfileError(f"FROM {args}: escapes in --platform aren't supported, pass -p/-t instead")
     out = []
     quote: str | None = None
     for ch in value:
@@ -154,9 +159,8 @@ def _split_from(args: str) -> tuple[str, str | None, str | None]:
         if seen_platform:
             raise DockerfileError(f"FROM {args}: duplicate --platform flag")
         seen_platform = True
-        platform = (
-            _unquote(flag.split("=", 1)[1], args) or None
-        )  # an empty value means the default platform, as in Docker
+        # Quotes are stripped as Docker does; an empty value means the default platform, as in Docker.
+        platform = _unquote(flag.split("=", 1)[1], args) or None
     if not words:
         raise DockerfileError(f"FROM {args}: no image")
     if len(words) == 1:
