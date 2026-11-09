@@ -87,7 +87,7 @@ def test_redirect_handler_refuses_https_downgrades():
     headers = http.client.HTTPMessage()
     req_https = urllib.request.Request("https://cdn.example/pyodide-lock.json")
     with pytest.raises(
-        urllib.error.URLError,
+        pypi.RedirectRefused,
         match=r"refused redirect from https://cdn\.example/pyodide-lock\.json to http://mirror\.example/lock\.json",
     ):
         handler.redirect_request(req_https, fp, 302, "Found", headers, "http://mirror.example/lock.json")
@@ -122,7 +122,7 @@ def test_refused_redirect_is_not_retried_and_surfaces_cleanly(monkeypatch):
 
     targets = wheelgap.make_targets(python="3.13", platforms="linux")
     result = wheelgap.check_package("fastlib", "2.0.0", targets)
-    assert result.error == "lookup failed (URLError)" and result.statuses[targets[0]] is Status.UNKNOWN
+    assert result.error == "lookup failed (RedirectRefused)" and result.statuses[targets[0]] is Status.UNKNOWN
 
 
 def test_pinned_version_missing_is_named(fake_pypi):

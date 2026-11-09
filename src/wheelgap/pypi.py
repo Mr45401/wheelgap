@@ -44,6 +44,10 @@ def _retry_after(e: urllib.error.HTTPError) -> float | None:
     return value if value is not None and math.isfinite(value) and value >= 0 else None
 
 
+class RedirectRefused(urllib.error.URLError):
+    """An https:// request was redirected to a URL that isn't https://."""
+
+
 class _HTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
     """Refuse to follow redirects that downgrade https:// to plain http:// (or another scheme)."""
 
@@ -57,7 +61,7 @@ class _HTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
         newurl: str,
     ) -> urllib.request.Request | None:
         if urlparse(req.full_url).scheme == "https" and urlparse(newurl).scheme != "https":
-            raise urllib.error.URLError(f"refused redirect from {req.full_url} to {newurl}")
+            raise RedirectRefused(f"refused redirect from {req.full_url} to {newurl}")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
@@ -78,9 +82,9 @@ def fetch_json(url: str, timeout: float = 20.0, attempts: int = 4) -> dict:
                 raise  # 404, 403, 410...: asking again won't help
             last = e
             delay = _retry_after(e) or delay
+        except RedirectRefused:
+            raise  # asking again gets the same redirect
         except (urllib.error.URLError, TimeoutError, http.client.HTTPException, ConnectionError) as e:
-            if isinstance(e, urllib.error.URLError) and str(e.reason).startswith("refused redirect"):
-                raise
             last = e  # includes connection resets and truncated responses
         if attempt + 1 < attempts:
             time.sleep(min(delay, 10.0))

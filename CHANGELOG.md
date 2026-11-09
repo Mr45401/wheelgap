@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Refuse `https://` to `http://` redirects when fetching from PyPI or `--pyodide-lock`. (#93)
+- An `https://` lookup (PyPI or `--pyodide-lock`) no longer follows a redirect to plain `http://`; it fails with an error naming both URLs. (#95, thanks [@Mr45401](https://github.com/Mr45401))
 
 ## 0.6.1 (2026-11-09)
 
